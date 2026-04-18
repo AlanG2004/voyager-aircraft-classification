@@ -157,27 +157,6 @@ The gap asymmetry is therefore not a simple "one direction is harder". It's two 
 
 Per-split confusion matrices and the cross-test comparison chart live under `figures/`. The polished one-page narrative is at `writeup/index.html`.
 
-## Verification
-
-I ran an independent adversarial ML review against the pipeline before calling it done. Implementer is not the reviewer. Findings and what I did about them:
-
-- **No-data shortcut. Disproven.** The asymmetric 25%/10% validity threshold could in principle let the model learn "more black pixels = not-aircraft." A per-split probe returned mean no-data ratio = 0.0 across all aircraft and non-aircraft chips in every split. The threshold is never activated in practice; these datasets are clean enough that the asymmetry is inert.
-- **Tile-level split integrity.** `verify.py` reconstructs the splits and confirms zero train/within-val overlap per direction. Direction A uses RP Public_Train; direction B uses Public_Test. Disjoint by construction, confirmed.
-- **GeoTransform assumption holds.** All 255 RP tiles inspected have axis-aligned affine parameters (off-diagonal b = d = 0), so the `_lonlat_to_pixel` simplification is valid for this dataset.
-- **Metric-math consistency.** `verify.py` recomputes accuracy and macro-F1 from each confusion matrix and compares with the reported numbers. All four match to four decimals.
-- **Single-seed reporting is the real limitation.** Numbers come from seed 42 only. Multi-seed error bars would be the next step.
-
-Two code-hygiene notes from the review got direct fixes in `src/data.py`: negative-chip sampling now uses `CHIP_SIZE // 2` as the boundary margin (instead of `CHIP_SIZE`, which was unnecessarily tight on 512×512 RP tiles), and `bounds_imcoords` parsing uses `round` instead of truncating `int(float(...))`.
-
-## What I skipped and why
-
-- **Bounding-box detection with mAP.** Scoped to chip classification using the annotations as crop coordinates. A real detector would need anchor tuning, mAP infrastructure, and label-format conversion. `predict_tile.py` provides a sliding-window detection demo at inference time.
-- **Multi-class aircraft subtypes.** RarePlanes carries role/wingspan attributes; xView has four aircraft classes (fixed-wing, small, cargo, helicopter). Aligning the two into a shared multi-class taxonomy is a design problem on its own.
-- **Synthetic RarePlanes imagery.** RarePlanes ships ~253k synthetic aircraft alongside the ~14k real ones. A synthetic-to-real arm would have been directly EMSI-native. Kickoff Q&A confirmed real-only was acceptable.
-- **Domain adaptation methods** (DANN feature alignment, MMD loss, CORAL). Would have strengthened the cross-dataset transfer story but require architectural changes.
-- **Hyperparameter tuning.** Out of scope per the prompt.
-- **Hardening beyond CPU/MPS/CUDA.** The device flag works across the three; multi-GPU and distributed are untested.
-
 ## What I'd do with another day
 
 1. Add the synthetic arm: train a third model on RarePlanes-synthetic, evaluate on both reals. Sim-to-real is the EMSI problem.
