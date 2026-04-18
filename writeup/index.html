@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cross-Dataset Aircraft Classification · Alan Gutierrez</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --navy: #142454;
+  --navy-soft: #52618A;
+  --paper: #FBF8EF;
+  --paper-tint: #F5F1E4;
+  --rule: #D9D2BF;
+  --rule-soft: #E8E2D0;
+  --brass: #B6892C;
+  --brass-deep: #8C6818;
+
+  --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--paper);
+  color: var(--navy);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.65;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.report {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 64px 40px 96px;
+}
+
+/* ---------- MASTHEAD ---------- */
+.masthead { margin-bottom: 40px; }
+
+.masthead h1 {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  margin-bottom: 10px;
+}
+
+.masthead .sub {
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--navy-soft);
+  font-weight: 400;
+  margin-bottom: 14px;
+}
+
+.masthead .byline {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--navy-soft);
+  letter-spacing: 0.02em;
+}
+
+.masthead .byline b { color: var(--navy); font-weight: 500; }
+
+/* ---------- ABSTRACT ---------- */
+.abstract {
+  margin: 4px 0 28px;
+  padding: 6px 0 6px 22px;
+  border-left: 3px solid var(--brass);
+}
+.abstract .label {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--brass-deep);
+  margin-bottom: 8px;
+}
+.abstract p {
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: var(--navy);
+  font-weight: 400;
+}
+
+/* ---------- TLDR BANNER ---------- */
+.tldr {
+  margin: 28px 0 36px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: var(--paper-tint);
+  padding: 22px 26px;
+}
+
+.tldr .tldr-label {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--navy-soft);
+  margin-bottom: 14px;
+}
+
+.tldr p {
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--navy);
+  margin-bottom: 10px;
+}
+
+.tldr p:last-child { margin-bottom: 0; }
+
+.tldr .nums {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 24px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule-soft);
+}
+
+.tldr .num-card .label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--navy-soft);
+  margin-bottom: 4px;
+}
+
+.tldr .num-card .val {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--brass);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.tldr .num-card .delta {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--navy-soft);
+  margin-top: 4px;
+}
+
+/* ---------- SECTION ---------- */
+section { margin-top: 48px; }
+
+section > h2 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--navy);
+}
+
+section > h3 {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 24px;
+  margin-bottom: 8px;
+  color: var(--navy);
+}
+
+section p { margin-bottom: 12px; }
+
+/* First paragraph in a section = lead */
+section > p.lead {
+  font-size: 16.5px;
+  font-weight: 500;
+  color: var(--navy);
+  margin-bottom: 16px;
+}
+
+/* ---------- INLINE ---------- */
+.key {
+  color: var(--brass);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+strong { font-weight: 600; color: var(--navy); }
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  padding: 1px 5px;
+  background: rgba(20, 36, 84, 0.06);
+  border-radius: 3px;
+}
+
+a { color: var(--brass-deep); text-decoration: underline; text-decoration-color: rgba(140, 104, 24, 0.4); }
+a:hover { text-decoration-color: var(--brass-deep); }
+
+/* ---------- CODE BLOCKS ---------- */
+pre {
+  background: var(--navy);
+  color: var(--paper);
+  padding: 20px 24px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.65;
+  overflow-x: auto;
+  margin: 16px 0 20px;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+}
+
+pre .kw { color: #F2C878; }
+pre .fn { color: #A8BEE8; }
+pre .str { color: #B9CFA0; }
+pre .cm { color: rgba(251, 248, 239, 0.5); font-style: italic; }
+
+/* ---------- FIGURES ---------- */
+figure { margin: 20px 0 28px; }
+
+figure img {
+  max-width: 100%;
+  display: block;
+  margin: 0 auto;
+}
+
+figure.bordered img {
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
+figcaption {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--navy-soft);
+  margin-top: 10px;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- TABLE ---------- */
+table.results {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  margin: 16px 0 20px;
+  font-size: 14px;
+}
+
+table.detailed {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  margin: 14px 0 20px;
+  font-size: 13px;
+}
+
+table.detailed th, table.detailed td { padding: 7px 10px; }
+table.detailed th { font-family: var(--font-display); font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--navy-soft); border-bottom: 1px solid var(--navy); text-align: left; }
+table.detailed th.num { text-align: right; }
+table.detailed td { border-bottom: 1px solid var(--rule-soft); }
+table.detailed td.num { text-align: right; font-family: var(--font-mono); }
+table.detailed tr.section-row td { border-top: 1px solid var(--rule); padding-top: 12px; padding-bottom: 6px; font-family: var(--font-display); font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--brass-deep); border-bottom: none; }
+table.detailed tr.head-row td { padding-top: 4px; }
+table.detailed td.metric { font-weight: 500; color: var(--navy); }
+
+/* ---------- HEATMAP LEGEND ---------- */
+.heatmap-legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin: 14px 0 10px;
+  padding: 12px 16px;
+  background: rgba(20, 36, 84, 0.04);
+  border-radius: 4px;
+  font-size: 12.5px;
+  color: var(--navy);
+  font-family: var(--font-mono);
+  align-items: center;
+}
+.heatmap-legend .swatch-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.heatmap-legend .swatch-label { color: var(--navy-soft); white-space: nowrap; }
+.heatmap-legend .grad {
+  flex: 1;
+  height: 12px;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: linear-gradient(to right, #FBF8EF, #F4C7C0, #DA6B5A, #A6261A);
+  min-width: 80px;
+}
+.heatmap-legend .key-text { color: var(--navy-soft); }
+.heatmap-legend .key-text b { color: var(--navy); font-weight: 600; }
+
+@media (max-width: 640px) {
+  .heatmap-legend { grid-template-columns: 1fr; gap: 8px; }
+}
+
+/* ---------- CONFUSION GRID ---------- */
+.cm-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin: 18px 0 24px;
+}
+
+.cm-grid figure { margin: 0; }
+.cm-grid figure img { width: 100%; border: 1px solid var(--rule); border-radius: 4px; display: block; }
+.cm-grid figcaption {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--navy-soft);
+  margin-top: 6px;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+table.results th,
+table.results td {
+  text-align: left;
+  padding: 10px 12px;
+}
+
+table.results th {
+  font-family: var(--font-display);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--navy-soft);
+  border-bottom: 1px solid var(--navy);
+}
+
+table.results td { border-bottom: 1px solid var(--rule); }
+
+table.results td.num { font-family: var(--font-mono); text-align: right; }
+table.results td.num.emph { color: var(--brass); font-weight: 600; font-size: 15px; }
+
+table.results tr.baseline td {
+  font-size: 13px;
+  color: var(--navy-soft);
+  padding-top: 12px;
+}
+
+/* ---------- CALLOUTS ---------- */
+.audit {
+  margin: 14px 0;
+  padding: 12px 16px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--navy);
+  background: rgba(20, 36, 84, 0.04);
+  border-left: 2px solid var(--brass);
+  border-radius: 0 4px 4px 0;
+}
+
+.audit .tag {
+  font-weight: 600;
+  color: var(--brass-deep);
+  letter-spacing: 0.05em;
+  margin-right: 6px;
+}
+
+/* ---------- LIST ---------- */
+ul.skipped {
+  margin: 12px 0 20px;
+  padding: 0;
+  list-style: none;
+}
+
+ul.skipped li {
+  padding: 11px 0;
+  border-bottom: 1px solid var(--rule-soft);
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  gap: 20px;
+  align-items: baseline;
+}
+
+ul.skipped li:last-child { border-bottom: none; }
+
+ul.skipped li .item {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--navy);
+  font-size: 14.5px;
+}
+
+ul.skipped li .reason {
+  color: var(--navy-soft);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+/* ---------- FOOTER ---------- */
+.footer {
+  margin-top: 60px;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--navy-soft);
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.footer .cmd code {
+  background: rgba(20, 36, 84, 0.08);
+  padding: 2px 8px;
+  color: var(--navy);
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 640px) {
+  .report { padding: 40px 20px 56px; }
+  .masthead h1 { font-size: 26px; }
+  .tldr .nums { grid-template-columns: 1fr; }
+  section > h2 { font-size: 19px; }
+  pre { font-size: 11.5px; padding: 14px 16px; }
+  ul.skipped li { grid-template-columns: 1fr; gap: 4px; }
+}
+</style>
+</head>
+<body>
+
+<article class="report">
+
+  <!-- ====================== MASTHEAD ====================== -->
+  <header class="masthead">
+    <h1>Cross-Dataset Aircraft Classification<br>on xView and RarePlanes</h1>
+    <p class="sub">Bidirectional chip classification, with the generalization gap measured in both directions.</p>
+    <div class="byline"><b>Alan Gutierrez</b> &nbsp;·&nbsp; 2026-04-17 &nbsp;·&nbsp; seed 42</div>
+  </header>
+
+  <!-- ====================== ABSTRACT ====================== -->
+  <div class="abstract">
+    <div class="label">Abstract</div>
+    <p>This pipeline answers one question on satellite imagery: does a 224×224 image chip contain an aircraft, yes or no? A ResNet-18 binary classifier is fine-tuned twice, once on xView and once on RarePlanes. Each trained model is then evaluated on held-out tiles of its own dataset (within-val) and on tiles of the other dataset (cross-test). The gap between within-val and cross-test names the domain shift between two datasets that share a Maxar WorldView-3 sensor but were annotated by different teams for different goals.</p>
+  </div>
+
+  <!-- ====================== TL;DR ====================== -->
+  <div class="tldr">
+    <div class="tldr-label">At a glance</div>
+    <p>One ResNet-18 pipeline trained twice (once per dataset) and tested on both. The cross-test gap measures domain transfer.</p>
+    <div class="nums">
+      <div class="num-card">
+        <div class="label">RP → xView · cross-test F1</div>
+        <div class="val">0.948</div>
+        <div class="delta">gap +0.004 &nbsp;·&nbsp; baseline 0.333</div>
+      </div>
+      <div class="num-card">
+        <div class="label">xView → RP · cross-test F1</div>
+        <div class="val">0.888</div>
+        <div class="delta">gap +0.079 &nbsp;·&nbsp; baseline 0.333</div>
+      </div>
+    </div>
+  </div>
+
+  <figure class="bordered">
+    <img src="chip_strip.png" alt="8 aircraft chips from both datasets tiled horizontally">
+    <figcaption>Figure 1. Eight 224×224 positive chips. 4 RarePlanes + 4 xView, shuffled.</figcaption>
+  </figure>
+
+  <!-- ====================== PROBLEM ====================== -->
+  <section>
+    <h2>Problem</h2>
+    <p class="lead">Two overhead imagery datasets, same sensor, different annotators. Train on one, test on both, measure the gap.</p>
+    <p>Both datasets are Maxar WorldView-3 pan-sharpened imagery at ~0.3 m/pixel. Cross-test isolates <em class="key">content + annotation shift</em>, not sensor shift. Task: binary chip classification on 224×224 crops. <code>predict_tile.py</code> wraps the chip classifier with a sliding window for tile-level inference.</p>
+  </section>
+
+  <!-- ====================== DATA + INSPECTION ====================== -->
+  <section>
+    <h2>Data and inspection</h2>
+    <p class="lead">Subset of each dataset (tiles → chips after extraction + validity filter + 1:1 balance), and the three pre-flight checks.</p>
+
+    <table class="results">
+      <thead>
+        <tr>
+          <th>Direction</th>
+          <th class="num">Train (tiles → chips)</th>
+          <th class="num">Within-val (tiles → chips)</th>
+          <th class="num">Cross-test (tiles → chips)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>A · RP → xView</strong></td><td class="num">400 RP &nbsp;→&nbsp; <span class="key">712</span></td><td class="num">100 RP &nbsp;→&nbsp; 210</td><td class="num">443 xView &nbsp;→&nbsp; 2,058</td></tr>
+        <tr><td><strong>B · xView → RP</strong></td><td class="num">355 xView &nbsp;→&nbsp; <span class="key">1,534</span></td><td class="num">88 xView &nbsp;→&nbsp; 524</td><td class="num">200 RP &nbsp;→&nbsp; 262</td></tr>
+      </tbody>
+    </table>
+
+    <p>Total training data: <strong><span class="key">2,246 chips</span></strong> (224×224 RGB), 1:1 positive:negative.</p>
+
+    <p><strong>Three checks before training</strong> (in <code>sanity.py</code> and <code>verify.py</code>):</p>
+    <ol style="margin: 8px 0 16px 24px;">
+      <li>16 sample chips saved to <code>figures/sample_chips/</code> for visual inspection. Caught the black-out edge cases that shaped the validity filter.</li>
+      <li>Overfit test on 100 chips, 15 epochs. Hits 100% training accuracy by epoch 3 (gradients flow, labels consistent).</li>
+      <li>Post-run: zero tile leakage between train and within-val. Metric math reconstructed from confusion matrices matches reported values to four decimals.</li>
+    </ol>
+  </section>
+
+  <!-- ====================== PREPROCESSING ====================== -->
+  <section>
+    <h2>Preprocessing</h2>
+    <p class="lead">Full data path, tile to model-ready tensor. Tensor shapes annotated between stages.</p>
+
+    <figure class="flow">
+      <svg viewBox="0 0 720 640" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Data flow diagram: xView and RarePlanes tiles are converted to 224x224 chips, filtered for validity, balanced 1 to 1, normalized and augmented, then passed through ResNet-18 for binary prediction.">
+        <defs>
+          <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="4" orient="auto">
+            <polygon points="0 0, 8 4, 0 8" fill="#52618A" />
+          </marker>
+        </defs>
+        <style>
+          .fbox { fill: #F5F1E4; stroke: #142454; stroke-width: 1.4; }
+          .tbox { fill: #FBF8EF; stroke: #142454; stroke-width: 1.4; }
+          .mbox { fill: #142454; stroke: #142454; stroke-width: 1.4; }
+          .obox { fill: #FBF8EF; stroke: #B6892C; stroke-width: 2; }
+          .t-title { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600; fill: #142454; }
+          .t-light { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600; fill: #FBF8EF; }
+          .t-brass { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; fill: #8C6818; }
+          .d-body  { font-family: 'Inter', sans-serif; font-size: 11.5px; fill: #52618A; }
+          .d-light { font-family: 'Inter', sans-serif; font-size: 11.5px; fill: #D9D2BF; }
+          .d-shape { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; fill: #B6892C; letter-spacing: 0.02em; }
+          .d-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #52618A; letter-spacing: 0.05em; }
+          .ln { stroke: #52618A; stroke-width: 1.3; fill: none; }
+        </style>
+
+        <!-- Row 1: two input sources -->
+        <g>
+          <rect class="fbox" x="40" y="16" width="300" height="62" rx="6"/>
+          <text class="t-title" x="56" y="36">xView tiles (.tif)</text>
+          <text class="d-body"  x="56" y="54">846 Maxar WorldView-3 GeoTIFFs</text>
+          <text class="d-body"  x="56" y="68">labels: bounds_imcoords in geojson</text>
+        </g>
+        <g>
+          <rect class="fbox" x="380" y="16" width="300" height="62" rx="6"/>
+          <text class="t-title" x="396" y="36">RarePlanes tiles (.png)</text>
+          <text class="d-body"  x="396" y="54">5,815 train + 5,420 test PS-RGB tiles</text>
+          <text class="d-body"  x="396" y="68">labels: WGS84 polygons + .aux.xml</text>
+        </g>
+
+        <!-- Converging arrows -->
+        <path class="ln" d="M 190 80 C 190 108, 360 108, 360 126" marker-end="url(#arrow)"/>
+        <path class="ln" d="M 530 80 C 530 108, 360 108, 360 126" marker-end="url(#arrow)"/>
+        <text class="d-shape" x="360" y="104" text-anchor="middle">H × W × 3 uint8</text>
+
+        <!-- Row 2: extract chips -->
+        <g>
+          <rect class="tbox" x="140" y="132" width="440" height="70" rx="6"/>
+          <text class="t-title" x="360" y="154" text-anchor="middle">1.  Extract 224×224 chips</text>
+          <text class="d-body"  x="360" y="172" text-anchor="middle">positives: centered on aircraft centroid</text>
+          <text class="d-body"  x="360" y="188" text-anchor="middle">negatives: random crops from non-aircraft regions</text>
+        </g>
+
+        <!-- Arrow + shape -->
+        <path class="ln" d="M 360 202 L 360 232" marker-end="url(#arrow)"/>
+        <text class="d-shape" x="374" y="222">224 × 224 × 3 uint8</text>
+
+        <!-- Row 3: validity + balance -->
+        <g>
+          <rect class="tbox" x="140" y="238" width="440" height="58" rx="6"/>
+          <text class="t-title" x="360" y="260" text-anchor="middle">2.  Validity filter + 1:1 balance</text>
+          <text class="d-body"  x="360" y="280" text-anchor="middle">drop chips with too many pure-black pixels (&gt;25% pos, &gt;10% neg)</text>
+        </g>
+
+        <!-- Arrow -->
+        <path class="ln" d="M 360 296 L 360 326" marker-end="url(#arrow)"/>
+
+        <!-- Row 4: dataset transforms -->
+        <g>
+          <rect class="tbox" x="140" y="332" width="440" height="74" rx="6"/>
+          <text class="t-title" x="360" y="354" text-anchor="middle">3.  ChipDataset (normalize + augment)</text>
+          <text class="d-body"  x="360" y="372" text-anchor="middle">train-time: HorizontalFlip + VerticalFlip + ColorJitter</text>
+          <text class="d-body"  x="360" y="388" text-anchor="middle">always: ImageNet mean/std normalization · DataLoader batch 64</text>
+        </g>
+
+        <!-- Arrow + shape -->
+        <path class="ln" d="M 360 406 L 360 436" marker-end="url(#arrow)"/>
+        <text class="d-shape" x="374" y="426">64 × 3 × 224 × 224 float32</text>
+
+        <!-- Row 5: model -->
+        <g>
+          <rect class="mbox" x="140" y="442" width="440" height="74" rx="6"/>
+          <text class="t-light" x="360" y="464" text-anchor="middle">4.  ResNet-18 (ImageNet pretrained)</text>
+          <text class="d-light" x="360" y="482" text-anchor="middle">layers 1–3 frozen · layer 4 + 2-layer head trained</text>
+          <text class="d-light" x="360" y="498" text-anchor="middle">BatchNorm held in eval() · 8.46M trainable params</text>
+        </g>
+
+        <!-- Arrow + shape -->
+        <path class="ln" d="M 360 516 L 360 548" marker-end="url(#arrow)"/>
+        <text class="d-shape" x="374" y="538">64 × 2 logits</text>
+
+        <!-- Row 6: output -->
+        <g>
+          <rect class="obox" x="230" y="554" width="260" height="48" rx="24"/>
+          <text class="t-brass" x="360" y="584" text-anchor="middle">aircraft  /  not-aircraft</text>
+        </g>
+      </svg>
+      <figcaption>Figure 2. Full pipeline from raw tile to binary prediction.</figcaption>
+    </figure>
+
+    <ul style="margin: 4px 0 4px 24px; font-size: 14px;">
+      <li><strong>Shared extractor.</strong> xView centroids from <code>bounds_imcoords</code>. RP centroids from WGS84 polygons via <code>.aux.xml</code> GeoTransform inversion. One downstream Dataset class.</li>
+      <li><strong>Asymmetric validity filter (25/10%).</strong> Lets aircraft near blacked-out tile edges survive while keeping negatives clean. Verified not a shortcut: mean no-data ratio = 0.0 across all splits.</li>
+      <li><strong>1:1 class balance via truncation.</strong> Forces the model to learn aircraft features. Pins majority baseline at F1 = 0.333.</li>
+      <li><strong>Train augmentations:</strong> HorizontalFlip, VerticalFlip, ColorJitter. No random crops (positives precisely centered).</li>
+      <li><strong>ImageNet mean/std normalization.</strong> Required by the pretrained backbone.</li>
+    </ul>
+  </section>
+
+  <!-- ====================== MODEL + TRAINING ====================== -->
+  <section>
+    <h2>Model and training</h2>
+    <p class="lead">ResNet-18, mostly frozen, trained with sane defaults.</p>
+
+    <ul style="margin: 4px 0 14px 24px; font-size: 14px;">
+      <li><strong>Backbone:</strong> ResNet-18 pretrained on ImageNet. Lightweight, well-benchmarked, trains in 3–7 min on Apple Silicon MPS.</li>
+      <li><strong>Frozen vs trainable:</strong> Layers 1–3 frozen (low-level features transfer). Layer 4 + new 2-layer head (512→128→2, ReLU + Dropout 0.3) trained. <span class="key">8.46M trainable params</span> out of 11.2M.</li>
+      <li><strong>BatchNorm in eval() during training.</strong> Frozen-backbone fine-tunes that leave BN in train mode silently corrupt pretrained features as running stats drift toward the new input distribution. <code>freeze_batchnorm</code> utility resets BN to eval after every <code>model.train()</code>.</li>
+      <li><strong>Optimizer:</strong> AdamW (lr=3e-4, wd=1e-4) + cosine annealing, 6 epochs, batch 64. Defaults, no tuning.</li>
+    </ul>
+
+<pre><code><span class="cm"># src/model.py</span>
+<span class="kw">def</span> <span class="fn">freeze_batchnorm</span>(model):
+    <span class="kw">for</span> module <span class="kw">in</span> model.modules():
+        <span class="kw">if</span> <span class="fn">isinstance</span>(module, (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d)):
+            module.<span class="fn">eval</span>()</code></pre>
+  </section>
+
+  <!-- ====================== EVALUATION ====================== -->
+  <section>
+    <h2>Evaluation</h2>
+    <p class="lead">Three-way split at the <em class="key">tile</em> level (no chip leakage). Macro-F1 headline. Majority-class baseline reported alongside every result.</p>
+
+    <ul style="margin: 4px 0 14px 24px; font-size: 14px;">
+      <li><strong>Train:</strong> 80% of source tiles.</li>
+      <li><strong>Within-val:</strong> 20% of source tiles. In-distribution fit.</li>
+      <li><strong>Cross-test:</strong> all of the other dataset. Out-of-distribution transfer.</li>
+      <li><strong>Metrics:</strong> macro-F1, accuracy, macro precision/recall, per-class F1/precision/recall, confusion matrix, PR-AUC, ROC-AUC, majority-class baseline.</li>
+    </ul>
+  </section>
+
+  <!-- ====================== RESULTS ====================== -->
+  <section>
+    <h2>Results</h2>
+    <p class="lead">Direction A (RP-trained) transfers to xView essentially without a gap. Direction B (xView-trained) takes a visible hit on RarePlanes, but the failure modes are mirror images.</p>
+
+    <p style="font-size: 14px; color: var(--navy-soft); margin-bottom: 18px;"><strong style="color: var(--navy);">About "baseline 0.333":</strong> Every test set is balanced 1:1 positive:negative. A "dumbest possible" model that always guesses the same class regardless of input would score macro-F1 = 0.333 on such a set. That is the floor every real model has to clear. Both trained models clear it by <span class="key">+0.55 to +0.62 F1</span>, which is what makes their numbers meaningful.</p>
+
+    <table class="results">
+      <thead>
+        <tr>
+          <th>Direction</th>
+          <th class="num">Train chips</th>
+          <th class="num">Within-val F1</th>
+          <th class="num">Cross-test F1</th>
+          <th class="num">Gap</th>
+          <th class="num">Cross-test N</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>RP → xView</strong></td><td class="num">712</td><td class="num">0.952</td><td class="num emph">0.948</td><td class="num emph">+0.004</td><td class="num">2,058</td></tr>
+        <tr><td><strong>xView → RP</strong></td><td class="num">1,534</td><td class="num">0.968</td><td class="num emph">0.888</td><td class="num emph">+0.079</td><td class="num">262</td></tr>
+      </tbody>
+    </table>
+
+    <figure class="bordered">
+      <img src="../figures/gap_comparison.png" alt="Within-val vs cross-test macro F1 paired bar chart, both directions">
+      <figcaption>Figure 3. Within-val and cross-test macro F1 per direction. Direction A's bars sit at nearly equal height (gap +0.004). Direction B's cross-test bar drops visibly below within-val (gap +0.079).</figcaption>
+    </figure>
+
+    <h3>Detailed metrics, every split</h3>
+    <p>Per-class precision/recall + PR-AUC + ROC-AUC alongside everything <code>results.json</code> reports.</p>
+
+    <table class="detailed">
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th class="num">A · within-val</th>
+          <th class="num">A · cross-test</th>
+          <th class="num">B · within-val</th>
+          <th class="num">B · cross-test</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="metric">Macro F1</td><td class="num">0.952</td><td class="num">0.948</td><td class="num">0.968</td><td class="num">0.888</td></tr>
+        <tr><td class="metric">Accuracy</td><td class="num">0.952</td><td class="num">0.948</td><td class="num">0.968</td><td class="num">0.889</td></tr>
+        <tr><td class="metric">Aircraft precision</td><td class="num">0.936</td><td class="num">0.989</td><td class="num">0.984</td><td class="num">0.823</td></tr>
+        <tr><td class="metric">Aircraft recall</td><td class="num">0.971</td><td class="num">0.907</td><td class="num">0.950</td><td class="num">0.992</td></tr>
+        <tr><td class="metric">Not-aircraft precision</td><td class="num">0.970</td><td class="num">0.914</td><td class="num">0.952</td><td class="num">0.990</td></tr>
+        <tr><td class="metric">Not-aircraft recall</td><td class="num">0.933</td><td class="num">0.990</td><td class="num">0.985</td><td class="num">0.786</td></tr>
+        <tr><td class="metric">PR-AUC (aircraft)</td><td class="num">0.995</td><td class="num">0.990</td><td class="num">0.995</td><td class="num">0.982</td></tr>
+        <tr><td class="metric">ROC-AUC (aircraft)</td><td class="num">0.995</td><td class="num">0.988</td><td class="num">0.994</td><td class="num">0.982</td></tr>
+        <tr><td class="metric">N samples</td><td class="num">210</td><td class="num">2,058</td><td class="num">524</td><td class="num">262</td></tr>
+      </tbody>
+    </table>
+
+    <p>Two patterns jump off the table. <strong>Direction A cross-test:</strong> aircraft precision <span class="key">0.989</span>, recall <span class="key">0.907</span>. Conservative. <strong>Direction B cross-test:</strong> aircraft recall <span class="key">0.992</span>, precision <span class="key">0.823</span>. Permissive.</p>
+
+    <h3>Confusion matrices</h3>
+    <div class="cm-grid">
+      <figure>
+        <img src="../figures/confusion_rareplanes_to_xview_within.png" alt="Confusion matrix for direction A within-val split">
+        <figcaption>Figure 4a. Direction A · within-val (RarePlanes held-out tiles)</figcaption>
+      </figure>
+      <figure>
+        <img src="../figures/confusion_rareplanes_to_xview_cross.png" alt="Confusion matrix for direction A cross-test split">
+        <figcaption>Figure 4b. Direction A · cross-test (xView tiles)</figcaption>
+      </figure>
+      <figure>
+        <img src="../figures/confusion_xview_to_rareplanes_within.png" alt="Confusion matrix for direction B within-val split">
+        <figcaption>Figure 4c. Direction B · within-val (xView held-out tiles)</figcaption>
+      </figure>
+      <figure>
+        <img src="../figures/confusion_xview_to_rareplanes_cross.png" alt="Confusion matrix for direction B cross-test split">
+        <figcaption>Figure 4d. Direction B · cross-test (RarePlanes test tiles)</figcaption>
+      </figure>
+    </div>
+
+    <h3>PR and ROC curves</h3>
+    <figure class="bordered">
+      <img src="../figures/curves_rp_to_xview.png" alt="PR and ROC curves for direction A, both splits">
+      <figcaption>Figure 5. Direction A · RP → xView. PR (left), ROC (right). Within-val and cross-test overlaid.</figcaption>
+    </figure>
+    <figure class="bordered">
+      <img src="../figures/curves_xview_to_rp.png" alt="PR and ROC curves for direction B, both splits">
+      <figcaption>Figure 6. Direction B · xView → RP. PR (left), ROC (right).</figcaption>
+    </figure>
+
+    <h3>What I conclude</h3>
+    <ul style="margin: 8px 0 14px 24px;">
+      <li><strong>Narrow training can still transfer.</strong> Direction A's +0.004 gap shows RP's airport-only aircraft features generalize to xView's broader contexts.</li>
+      <li><strong>Broad training is recall-heavy.</strong> Direction B catches <span class="key">99%</span> of RP aircraft but fires on confusable backgrounds.</li>
+      <li><strong>The gap is a data-curation question, not a modeling one.</strong> Both directions produce strong within-val numbers. The cross-test gap maps cleanly onto each dataset's "not-aircraft" definition.</li>
+      <li><strong>Cross-dataset eval reveals what within-dataset eval hides.</strong> Either model would look excellent on its own held-out data alone.</li>
+    </ul>
+  </section>
+
+  <!-- ====================== INFERENCE AT TILE SCALE ====================== -->
+  <section>
+    <h2>Inference at tile scale</h2>
+    <p class="lead"><code>predict_tile.py</code> slides a 224×224 window across a whole tile and outputs a per-window aircraft heatmap. Bridges chip classification to "is there an aircraft in this tile?"</p>
+
+    <div class="heatmap-legend">
+      <div class="swatch-row">
+        <span class="swatch-label">low&nbsp;P(aircraft)</span>
+        <span class="grad"></span>
+        <span class="swatch-label">high</span>
+      </div>
+      <div class="key-text">
+        <b>red overlay</b> = model thinks an aircraft is here. Brighter red = higher confidence. Each colored cell is one 224×224 window prediction. Window stride is 112px (50% overlap).
+      </div>
+    </div>
+
+    <figure class="bordered">
+      <img src="../figures/heatmap_demo.png" alt="Sliding-window aircraft heatmap overlaid on a held-out RarePlanes tile">
+      <figcaption>Figure 7. xView-trained model run on a held-out RarePlanes test tile (cross-dataset inference). 5 out of 16 sliding-window positions cross the 0.5 threshold. Bright red regions land on the visible aircraft on the tarmac.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ====================== CODE ORGANIZATION ====================== -->
+  <section>
+    <h2>Code organization</h2>
+    <p class="lead">Library code in <code>src/</code>. Entry-point scripts at top level. Auxiliary scripts in <code>scripts/</code>. Configs in YAML.</p>
+
+    <table class="results">
+      <thead>
+        <tr><th>Path</th><th>Role</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>run.sh</code></td><td>One-command wrapper (venv + deps + pipeline)</td></tr>
+        <tr><td><code>run.py</code></td><td>Pipeline entry point, both directions</td></tr>
+        <tr><td><code>predict.py</code> · <code>predict_tile.py</code></td><td>Inference: chip-level and tile sliding-window</td></tr>
+        <tr><td><code>configs/*.yaml</code></td><td>Per-direction hyperparameters</td></tr>
+        <tr><td><code>src/data.py</code></td><td>Chip extraction (both datasets) + validity filter + PyTorch Dataset</td></tr>
+        <tr><td><code>src/model.py</code></td><td>ResNet-18 + BN-freeze utility</td></tr>
+        <tr><td><code>src/train.py</code></td><td>AdamW + cosine annealing</td></tr>
+        <tr><td><code>src/eval.py</code></td><td>Metrics + confusion plot + comparison bar</td></tr>
+        <tr><td><code>scripts/sanity.py</code> · <code>scripts/verify.py</code></td><td>Pre-flight (sample + overfit) and post-run (leakage + metric-math) checks</td></tr>
+        <tr><td><code>scripts/plot_curves.py</code> · <code>scripts/chip_strip.py</code></td><td>Auxiliary plot generators</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ====================== REPRODUCIBILITY ====================== -->
+  <section>
+    <h2>Reproducibility</h2>
+    <p>Single command end to end. <code>./run.sh</code> creates a virtual environment, installs pinned dependencies, runs both directions, writes <code>results.json</code> + figures + saved model weights. Seed 42 throughout (Python, numpy, torch). <code>predict.py</code> and <code>predict_tile.py</code> run the saved models against arbitrary images.</p>
+  </section>
+
+  <div class="footer">
+    <div class="who"><b style="color: var(--navy); font-weight: 600;">Alan Gutierrez</b> &nbsp;·&nbsp; Voyager Technologies Take-Home &nbsp;·&nbsp; 2026-04-17</div>
+  </div>
+
+</article>
+
+</body>
+</html>

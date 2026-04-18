@@ -1,0 +1,22 @@
+{
+  "rareplanes_to_xview": {
+    "within_val": {
+      "pr_auc": 0.9948763309452899,
+      "roc_auc": 0.9948299319727891
+    },
+    "cross_test": {
+      "pr_auc": 0.9900417043988453,
+      "roc_auc": 0.9882446939625497
+    }
+  },
+  "xview_to_rareplanes": {
+    "within_val": {
+      "pr_auc": 0.9954695638496722,
+      "roc_auc": 0.9942165374978148
+    },
+    "cross_test": {
+      "pr_auc": 0.9820448705980831,
+      "roc_auc": 0.9819357846279354
+    }
+  }
+}

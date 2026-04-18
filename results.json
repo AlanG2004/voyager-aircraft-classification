@@ -1,0 +1,116 @@
+{
+  "rareplanes_to_xview": {
+    "config_name": "rareplanes_to_xview",
+    "train": {
+      "epochs": 6,
+      "final_train_loss": 0.0217,
+      "final_train_acc": 0.9916,
+      "wall_seconds": 21.1,
+      "n_chips": 712
+    },
+    "within_val": {
+      "accuracy": 0.9524,
+      "precision_macro": 0.953,
+      "recall_macro": 0.9524,
+      "f1_macro": 0.9524,
+      "f1_per_class": [
+        0.9515,
+        0.9533
+      ],
+      "confusion": [
+        [
+          98,
+          7
+        ],
+        [
+          3,
+          102
+        ]
+      ],
+      "baseline_accuracy": 0.5,
+      "baseline_f1_macro": 0.3333,
+      "n_samples": 210
+    },
+    "cross_test": {
+      "accuracy": 0.9485,
+      "precision_macro": 0.9516,
+      "recall_macro": 0.9485,
+      "f1_macro": 0.9484,
+      "f1_per_class": [
+        0.9506,
+        0.9462
+      ],
+      "confusion": [
+        [
+          1019,
+          10
+        ],
+        [
+          96,
+          933
+        ]
+      ],
+      "baseline_accuracy": 0.5,
+      "baseline_f1_macro": 0.3333,
+      "n_samples": 2058
+    },
+    "generalization_gap_f1": 0.004
+  },
+  "xview_to_rareplanes": {
+    "config_name": "xview_to_rareplanes",
+    "train": {
+      "epochs": 6,
+      "final_train_loss": 0.0126,
+      "final_train_acc": 0.9948,
+      "wall_seconds": 79.3,
+      "n_chips": 1534
+    },
+    "within_val": {
+      "accuracy": 0.9676,
+      "precision_macro": 0.9681,
+      "recall_macro": 0.9676,
+      "f1_macro": 0.9675,
+      "f1_per_class": [
+        0.9681,
+        0.967
+      ],
+      "confusion": [
+        [
+          258,
+          4
+        ],
+        [
+          13,
+          249
+        ]
+      ],
+      "baseline_accuracy": 0.5,
+      "baseline_f1_macro": 0.3333,
+      "n_samples": 524
+    },
+    "cross_test": {
+      "accuracy": 0.8893,
+      "precision_macro": 0.9066,
+      "recall_macro": 0.8893,
+      "f1_macro": 0.8881,
+      "f1_per_class": [
+        0.8766,
+        0.8997
+      ],
+      "confusion": [
+        [
+          103,
+          28
+        ],
+        [
+          1,
+          130
+        ]
+      ],
+      "baseline_accuracy": 0.5,
+      "baseline_f1_macro": 0.3333,
+      "n_samples": 262
+    },
+    "generalization_gap_f1": 0.0794
+  }
+}

@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+**/.DS_Store
+.backup/
+rerun*.log
+full_run.log
+session_log.md

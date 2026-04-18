@@ -1,0 +1,15 @@
+name: xview_to_rareplanes
+train_source: xview
+test_source: rareplanes
+seed: 42
+
+train:
+  n_xview_aircraft_tiles: 143
+  n_xview_non_aircraft_tiles: 300
+  epochs: 6
+  lr: 3.0e-4
+  batch_size: 64
+
+test:
+  n_rareplanes_tiles: 200
+  negatives_per_tile: 3

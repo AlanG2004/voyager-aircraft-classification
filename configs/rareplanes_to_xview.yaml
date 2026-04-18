@@ -1,0 +1,16 @@
+name: rareplanes_to_xview
+train_source: rareplanes
+test_source: xview
+seed: 42
+
+train:
+  n_rareplanes_tiles: 500
+  negatives_per_tile: 3
+  epochs: 6
+  lr: 3.0e-4
+  batch_size: 64
+
+test:
+  n_xview_aircraft_tiles: 143   # all of them; we split chips 80/20 for tile-level train/test
+  n_xview_non_aircraft_tiles: 300
+  xview_holdout_ratio: 1.0      # use all xview chips as eval
